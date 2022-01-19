@@ -1,23 +1,29 @@
+const { Buffer } = require("buffer")
 
 /**
  * Funcion que valida los argumentos de forma individual
  * *(esta funcion no retorna ningu dato)*
  */
-const ValidateSingleOperation = (singleOperation = {}) => new Promise((resolve, reject) => {
+const ValidateSingleOperation = (singleOperation = { start, length, callback }) => new Promise((resolve, reject) => {
   try {
     // validaremos el atributo start 
     if (!singleOperation.start) {
-      throw String(`Start Value is requires`)
-    }
+      throw String(`Start Value is required`)
+    }    
 
     // validaremos el atributo length 
     if (!singleOperation.length) {
-      throw String(`Length Value is requires`)
+      throw String(`Length Value is required`)
+    }
+
+    // validamos los tipos de formatos
+    if (typeof singleOperation.start !== "number" || typeof singleOperation.length !== "number") {
+      throw String("Start value or length value is not a number")
     }
 
     // validaremos el atributo callback
     if (!singleOperation.callback) {
-      throw String(`Callback Value is requires`)
+      throw String(`Callback Value is required`)
     }
 
     resolve()
@@ -86,23 +92,24 @@ const read = async (operations = [] || {}) => {
       const data = operationsValidated[operation_index]
 
       // creamos el contenedor de los buffer
-      // empecamos que con el blocke incial
+      // empezamos que con el bloque incial
       const BlocksArray = []
 
-      // let BlockNumber = data.start
-
+      // Sumamos los bloques
       const totalLength = (data.start + data.length)
 
       // calcularemos el rango
       // si la base es 3  y el rango es 2
       // tendremos que construir algo asi -> [3, 4, 5]
       for (let base = data.start; base <= totalLength; base++) {
-        console.log(base)
-
         BlocksArray.push(base)
       }
 
-      data.callback(BlocksArray)
+      // Buscamos el buffer de los bloues
+      const b = Buffer.from(BlocksArray)
+
+      // Ejecutamos el callback del bloque indicado
+      data.callback(b)
     }
   } catch (error) {
     console.log(`Error in buffer: ${error.toString()}`)
@@ -112,4 +119,15 @@ const read = async (operations = [] || {}) => {
 
 // console.log()
 
-read([{ start: 3, length: 1, callback: (data) => console.log(data) }, { start: 1, length: 2, callback: (data) => console.log(data) }])
+// En este ejemplo podremos ejecutar la funcnion read
+// cuantas veces querramos pansando solo un dato como objeto
+new Array(10).fill(2).map((value, index) => read({ 
+  start: (index * value), 
+  length: (index * value)  * 3,
+  callback: (data) => console.log(data)
+}))
+
+// En este ejemplo podremos que pasaremos muchos elementos
+// dentro de un arreglo, esto es para ejecutar una vez
+// la funcion `read` con muchos datos a la vez
+// read([{ start: 3, length: 1, callback: (data) => console.log(data) }, { start: 1, length: 2, callback: (data) => console.log(data) }])
